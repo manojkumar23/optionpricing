@@ -6,7 +6,7 @@ class PortfolioToolsSpecification extends Specification {
 
   "portfolio parser" should {
     val theDefinition = """
-      portfolio pf1
+      portfolio pf1 compare with "^GSPC"
       long THRM USD 10000 on 2010-12-14 at 11.14
       long LKQ USD 10000  on 2010-12-14 at 23.20 stop loss 50%
       long DORM USD 10000 on 2010-12-14 at 38.86

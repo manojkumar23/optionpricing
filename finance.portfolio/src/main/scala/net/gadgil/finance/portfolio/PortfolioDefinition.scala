@@ -14,10 +14,13 @@ class PortfolioDefinition {
 }
 
 object PortfolioDefinition extends JavaTokenParsers {
-  def portfolioStruct: Parser[PortfolioInfo] = "portfolio" ~> ident ~ portfolioComposition ^^ {
-    case portfolioName ~ portfolioComposition =>
-      PortfolioInfo(portfolioName, portfolioComposition)
+  def portfolioStruct: Parser[PortfolioInfo] = "portfolio" ~> ident ~ compareWith ~ portfolioComposition ^^ {
+    case portfolioName ~ compareWith ~ portfolioComposition =>
+      PortfolioInfo(portfolioName, compareWith, portfolioComposition)
   }
+
+  def compareWith: Parser[String] = "compare" ~> "with" ~> stringLiteral
+
   def portfolioComposition: Parser[Seq[PortfolioPosition]] = position.+
   def position: Parser[PortfolioPosition] = ("long" | "short") ~ ident ~ ident ~ decimalNumber ~ onDate1 ~ atPrice ~ stopLoss.? ^^ {
     case positionType ~ symbol ~ currencyCode ~ amount ~ theDate ~ thePrice ~ theStopLoss => {
@@ -25,7 +28,7 @@ object PortfolioDefinition extends JavaTokenParsers {
       PortfolioPosition(positionType, symbol, amount.toDouble, theDate)
     }
   }
-  
+
   def atPrice: Parser[Double] = "at" ~> decimalNumber ^^ {
     case thePrice => {
       thePrice.toDouble
@@ -46,7 +49,7 @@ object PortfolioDefinition extends JavaTokenParsers {
 }
 
 case class TradeDate(year: Int, month: Int, day: Int)
-case class PortfolioInfo(name: String, positions: Seq[PortfolioPosition])
+case class PortfolioInfo(name: String, compareWith: String, positions: Seq[PortfolioPosition])
 case class PortfolioPosition(positionType: String, symbol: String, amount: Double, dateTime: DateTime)
 
 object PortfolioProcessor {
@@ -108,6 +111,11 @@ object PortfolioProcessor {
   }
 
   def parsePortfolio(portfolioDefinitionString: String): PortfolioInfo = {
-    PortfolioDefinition.parseAll(PortfolioDefinition.portfolioStruct, portfolioDefinitionString).get
+    val theParsedPortfolio = PortfolioDefinition.parseAll(PortfolioDefinition.portfolioStruct, portfolioDefinitionString)
+    if (theParsedPortfolio.successful) {
+      theParsedPortfolio.get
+    } else {
+      throw new IllegalArgumentException(theParsedPortfolio.toString())
+    }
   }
 }
