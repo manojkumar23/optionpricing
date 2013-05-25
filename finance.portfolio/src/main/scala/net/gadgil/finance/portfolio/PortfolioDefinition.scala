@@ -131,6 +131,15 @@ object PortfolioProcessor {
   def simulatePortfolio(portfolioDefinitionString: String) = {
     val thePortfolioInfo = parsePortfolio(portfolioDefinitionString)
     // Usually an index symbol, but it does not have to be an index
-    val theIndex = thePortfolioInfo.compareWith
+    val theIndexSymbol = thePortfolioInfo.compareWith.substring(1, thePortfolioInfo.compareWith.length() - 1).replace("^", "%5E")
+    val theHistoricalPricesForindex = getHistoricalPrices(theIndexSymbol, 
+        thePortfolioInfo.positionDuration.fromDate, 
+        thePortfolioInfo.positionDuration.toDate)
+    val theHistoricalPricesForPositions = thePortfolioInfo.positions.map { thePosition =>
+      (thePosition.symbol, getHistoricalPrices(thePosition.symbol, 
+        thePortfolioInfo.positionDuration.fromDate, 
+        thePortfolioInfo.positionDuration.toDate))
+    }
+    (theHistoricalPricesForPositions :+ (theIndexSymbol, theHistoricalPricesForindex)).toMap
   }
 }
