@@ -8,6 +8,9 @@ import org.supercsv.io.CsvMapReader
 import java.io.InputStreamReader
 import org.supercsv.prefs.CsvPreference
 import scala.collection.JavaConversions._
+import scala.collection.immutable.SortedMap
+import scala.collection.immutable.TreeMap
+import scala.collection.SortedSet
 
 class PortfolioDefinition {
 
@@ -39,7 +42,7 @@ object PortfolioDefinition extends JavaTokenParsers {
     }
   }
 
-  def stopLoss: Parser[Double] = "stop loss" ~> decimalNumber ~ "%".? ^^ {
+  def stopLoss: Parser[Double] = "stop-loss" ~> decimalNumber ~ "%".? ^^ {
     case theStopLoss ~ isPercent =>
       theStopLoss.toDouble * (if (isPercent.isDefined) { 0.01 } else { 1 })
   }
@@ -67,7 +70,7 @@ object PortfolioProcessor {
     // Example: http://finance.yahoo.com/q/hp?s=MSFT&a=01&b=3&c=2005&d=01&e=3&f=2013&g=m
     // http://ichart.finance.yahoo.com/table.csv?s=MSFT&a=1&b=4&c=2006&d=1&e=4&f=2013&g=m&ignore=.csv
     // Example: http://finance.yahoo.com/q/hp?s=<SYMBOL>&a=<FROM-MONTH-1>&b=<FROM-DAY>&c=<FROM-YEAR>&d=<TO-MONTH-1>&e=<TO-DAY>&f=<TO-YEAR>&g=m
-    val theUrlTemplate = "http://ichart.finance.yahoo.com/table.csv?s=%s&a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&g=m&ignore=.csv"
+    val theUrlTemplate = "http://ichart.finance.yahoo.com/table.csv?s=%s&a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&g=d&ignore=.csv"
     val theYahooHistoricalPriceUrl = theUrlTemplate.format(
       symbol,
       theCurrentDate.monthOfYear().get() - 1,
@@ -116,7 +119,12 @@ object PortfolioProcessor {
     //      m.toMap
     //    }
     val theIterator = new CsvIterator(theCSVReader)
-    theIterator.toArray
+    // Return in chronological order
+    val theChronologicalHistoricalPrices = theIterator.toSeq.reverse
+    val theChronologicalTuples = theChronologicalHistoricalPrices.map { theRow =>
+      (theRow("Date"), theRow)
+    }
+    SortedMap(theChronologicalTuples: _*)
   }
 
   def parsePortfolio(portfolioDefinitionString: String): PortfolioInfo = {
@@ -132,14 +140,25 @@ object PortfolioProcessor {
     val thePortfolioInfo = parsePortfolio(portfolioDefinitionString)
     // Usually an index symbol, but it does not have to be an index
     val theIndexSymbol = thePortfolioInfo.compareWith.substring(1, thePortfolioInfo.compareWith.length() - 1).replace("^", "%5E")
-    val theHistoricalPricesForindex = getHistoricalPrices(theIndexSymbol, 
-        thePortfolioInfo.positionDuration.fromDate, 
-        thePortfolioInfo.positionDuration.toDate)
+    val theHistoricalPricesForIndex = getHistoricalPrices(theIndexSymbol,
+      thePortfolioInfo.positionDuration.fromDate,
+      thePortfolioInfo.positionDuration.toDate)
+    //val theActualStartDate = DateTime.parse(theHistoricalPricesForIndex(0)("Date"))
     val theHistoricalPricesForPositions = thePortfolioInfo.positions.map { thePosition =>
-      (thePosition.symbol, getHistoricalPrices(thePosition.symbol, 
-        thePortfolioInfo.positionDuration.fromDate, 
+      (thePosition.symbol, getHistoricalPrices(thePosition.symbol,
+        thePortfolioInfo.positionDuration.fromDate,
         thePortfolioInfo.positionDuration.toDate))
     }
-    (theHistoricalPricesForPositions :+ (theIndexSymbol, theHistoricalPricesForindex)).toMap
+    val theAvailableDates = theHistoricalPricesForIndex.keySet
+    // find the result of subtracting all the keys from the index
+    // (only dates that occur in all datasets)
+    val theSetOfCommonDates = theHistoricalPricesForPositions.foldLeft(theAvailableDates) { (r,c) =>
+      //println("subtracting: " + c._2.keySet + " from: " + r)
+      r.intersect(c._2.keySet)
+    }
+    //println("found common dates: " + theSetOfCommonDates.slice(0, 10))
+    val symbolToHistoricalPricesMap = (theHistoricalPricesForPositions :+ (theIndexSymbol, theHistoricalPricesForIndex)).toMap
+    // Now construct positions
+    thePortfolioInfo.positions(0).positionType
   }
 }
