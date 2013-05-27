@@ -82,7 +82,7 @@ object PortfolioProcessor {
       toDate.monthOfYear().get() - 1,
       toDate.dayOfMonth().get(),
       toDate.year().get())
-   //println("the url: " + theYahooHistoricalPriceUrl + " for " + fromDate + " to " + toDate)
+    //println("the url: " + theYahooHistoricalPriceUrl + " for " + fromDate + " to " + toDate)
     val ahc = new AsyncHttpClient
     val theQueryParameters: Map[String, String] = Map("s" -> symbol,
       "a" -> String.valueOf(fromDate.monthOfYear().get() - 1),
@@ -167,19 +167,16 @@ object PortfolioProcessor {
       throw new IllegalArgumentException("No usable data found for portfolio definition: " + portfolioDefinitionString)
     }
 
+    // Number of shares purchased
+    // Negative number for short positions
     val numSharesMap = (thePortfolioInfo.positions.map { thePosition =>
       val theClosingPrice = theHistoricalPricesForPositions(thePosition.symbol)(theSequentialDates(0))("Close").toDouble
-      (thePosition.symbol, thePosition.amount / theClosingPrice)
+      val theShortAdjustment = if (thePosition.positionType == "short") { -1.0 } else { 1.0 }
+      (thePosition.symbol, theShortAdjustment * thePosition.amount / theClosingPrice)
     }).toMap
 
     val xx = theSequentialDates.map { theDate =>
-
-      val x = (theHistoricalPricesForPositions.map { p =>
-        (theDate, ((theHistoricalPricesForIndex(theDate)("Close").toDouble), numSharesMap(p._1) * (p._2(theDate)("Close").toDouble)))
-      })
-      //      (theHistoricalPricesForIndex(theDate)("Close").toDouble,
-      //        theHistoricalPricesForPositions)
-      x
+    	calculateDailyPosition(theDate, numSharesMap, theHistoricalPricesForIndex, theHistoricalPricesForPositions, thePortfolioInfo.positions)
     }
     //println("found common dates: " + theSetOfCommonDates.slice(0, 10))
     //val symbolToHistoricalPricesMap = (theHistoricalPricesForPositions :+ (theIndexSymbol, theHistoricalPricesForIndex)).toMap
@@ -187,4 +184,32 @@ object PortfolioProcessor {
     //thePortfolioInfo.positions(0).positionType
     xx
   }
+
+  def calculateDailyPosition(date: String,
+    numSharesMap: Map[String, Double],
+    historicalPricesForIndex: SortedMap[String, Map[String, String]],
+    theHistoricalPricesForPositions: Map[String, SortedMap[String, Map[String, String]]],
+    positions: Seq[PortfolioPosition]) = {
+
+    val theTotalAmountInvested = positions.foldLeft(0.0) { (theTotal, thePosition) =>
+      theTotal + thePosition.amount
+    }
+    val theSymbolToAmountMap = (
+      positions.map { p =>
+        (p.symbol, p.amount)
+      }).toMap
+    val thePositionValue = numSharesMap.keySet.foldLeft(0.0) { (theTotal, theSymbol) =>
+      val theNumShares = numSharesMap(theSymbol)
+      if (theNumShares < 0) {
+        // if this position is a short position, value should be subtracted from initial amount
+        // since numShares will be negative, we add
+        theTotal + (theSymbolToAmountMap(theSymbol) + theHistoricalPricesForPositions(theSymbol)(date)("Close").toDouble * theNumShares)
+      } else {
+        theTotal + theHistoricalPricesForPositions(theSymbol)(date)("Close").toDouble * theNumShares
+      }
+    }
+    DateToPositionMap(date, theTotalAmountInvested / historicalPricesForIndex(date)("Close").toDouble, thePositionValue)
+  }
 }
+
+case class DateToPositionMap(date: String, indexValue: Double, positionValue: Double)
