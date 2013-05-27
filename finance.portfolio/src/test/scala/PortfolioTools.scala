@@ -6,7 +6,7 @@ class PortfolioToolsSpecification extends Specification {
 
   "portfolio parser" should {
     val theDefinition = """
-      portfolio pf1 compare with "^GSPC" from 2010-12-14 to now
+      portfolio pf1 compare with "^GSPC" from 2013-04-01 to 2013-05-02
       long THRM USD 10000 at 11.14
       long LKQ USD 10000 at 23.20 stop-loss 50%
       long DORM USD 10000 at 38.86
@@ -14,7 +14,8 @@ class PortfolioToolsSpecification extends Specification {
       short TEN USD 10000 at 41.19  stop-loss 100%
         """
     "parse test" in {
-      PortfolioProcessor.simulatePortfolio(theDefinition)
+      val y = PortfolioProcessor.simulatePortfolio(theDefinition)
+      println(y)
       val x = PortfolioDefinition.parseAll(PortfolioDefinition.portfolioStruct, theDefinition)
       println(x)
       x.get.name must be equalTo "pf1"

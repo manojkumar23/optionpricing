@@ -25,7 +25,10 @@ object PortfolioDefinition extends JavaTokenParsers {
   def compareWith: Parser[String] = "compare" ~> "with" ~> stringLiteral
 
   def dateRange: Parser[PositionDuration] = ("from" ~> dateDef) ~ ("to" ~> dateDef) ^^ {
-    case fromDate ~ toDate => PositionDuration(fromDate, toDate)
+    case fromDate ~ toDate => {
+      //println("from: " + fromDate + " to: " + toDate)
+      PositionDuration(fromDate, toDate)
+    }
   }
 
   def portfolioComposition: Parser[Seq[PortfolioPosition]] = position.+
@@ -47,7 +50,7 @@ object PortfolioDefinition extends JavaTokenParsers {
       theStopLoss.toDouble * (if (isPercent.isDefined) { 0.01 } else { 1 })
   }
 
-  def dateDef: Parser[DateTime] = (new Regex("([0-9]{4})-([0-9]{2})-([0-9]{2})") | "now") ^^ { theDate =>
+  def dateDef: Parser[DateTime] = new Regex("([0-9]{4})-([0-9]{2})-([0-9]{2})") ^^ { theDate =>
     if (theDate == "now") {
       new DateTime()
     } else {
@@ -66,19 +69,20 @@ case class PositionDuration(fromDate: DateTime, toDate: DateTime)
 
 object PortfolioProcessor {
   def getHistoricalPrices(symbol: String, fromDate: DateTime, toDate: DateTime = DateTime.now()) = {
-    val theCurrentDate = new DateTime()
+    //val theCurrentDate = new DateTime()
     // Example: http://finance.yahoo.com/q/hp?s=MSFT&a=01&b=3&c=2005&d=01&e=3&f=2013&g=m
     // http://ichart.finance.yahoo.com/table.csv?s=MSFT&a=1&b=4&c=2006&d=1&e=4&f=2013&g=m&ignore=.csv
     // Example: http://finance.yahoo.com/q/hp?s=<SYMBOL>&a=<FROM-MONTH-1>&b=<FROM-DAY>&c=<FROM-YEAR>&d=<TO-MONTH-1>&e=<TO-DAY>&f=<TO-YEAR>&g=m
     val theUrlTemplate = "http://ichart.finance.yahoo.com/table.csv?s=%s&a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&g=d&ignore=.csv"
     val theYahooHistoricalPriceUrl = theUrlTemplate.format(
       symbol,
-      theCurrentDate.monthOfYear().get() - 1,
-      theCurrentDate.dayOfMonth().get(),
-      theCurrentDate.year().get() - 7,
-      theCurrentDate.monthOfYear().get() - 1,
-      theCurrentDate.dayOfMonth().get(),
-      theCurrentDate.year().get())
+      fromDate.monthOfYear().get() - 1,
+      fromDate.dayOfMonth().get(),
+      fromDate.year().get(),
+      toDate.monthOfYear().get() - 1,
+      toDate.dayOfMonth().get(),
+      toDate.year().get())
+   //println("the url: " + theYahooHistoricalPriceUrl + " for " + fromDate + " to " + toDate)
     val ahc = new AsyncHttpClient
     val theQueryParameters: Map[String, String] = Map("s" -> symbol,
       "a" -> String.valueOf(fromDate.monthOfYear().get() - 1),
@@ -144,21 +148,43 @@ object PortfolioProcessor {
       thePortfolioInfo.positionDuration.fromDate,
       thePortfolioInfo.positionDuration.toDate)
     //val theActualStartDate = DateTime.parse(theHistoricalPricesForIndex(0)("Date"))
-    val theHistoricalPricesForPositions = thePortfolioInfo.positions.map { thePosition =>
+
+    // Map of symbols and historical positions  
+    val theHistoricalPricesForPositions = (thePortfolioInfo.positions.map { thePosition =>
       (thePosition.symbol, getHistoricalPrices(thePosition.symbol,
         thePortfolioInfo.positionDuration.fromDate,
         thePortfolioInfo.positionDuration.toDate))
-    }
+    }).toMap
     val theAvailableDates = theHistoricalPricesForIndex.keySet
     // find the result of subtracting all the keys from the index
     // (only dates that occur in all datasets)
-    val theSetOfCommonDates = theHistoricalPricesForPositions.foldLeft(theAvailableDates) { (r,c) =>
+    val theSetOfCommonDates = theHistoricalPricesForPositions.foldLeft(theAvailableDates) { (r, c) =>
       //println("subtracting: " + c._2.keySet + " from: " + r)
       r.intersect(c._2.keySet)
     }
+    val theSequentialDates = theSetOfCommonDates.toSeq
+    if (theSequentialDates.length == 0) {
+      throw new IllegalArgumentException("No usable data found for portfolio definition: " + portfolioDefinitionString)
+    }
+
+    val numSharesMap = (thePortfolioInfo.positions.map { thePosition =>
+      val theClosingPrice = theHistoricalPricesForPositions(thePosition.symbol)(theSequentialDates(0))("Close").toDouble
+      (thePosition.symbol, thePosition.amount / theClosingPrice)
+    }).toMap
+
+    val xx = theSequentialDates.map { theDate =>
+
+      val x = (theHistoricalPricesForPositions.map { p =>
+        (theDate, ((theHistoricalPricesForIndex(theDate)("Close").toDouble), numSharesMap(p._1) * (p._2(theDate)("Close").toDouble)))
+      })
+      //      (theHistoricalPricesForIndex(theDate)("Close").toDouble,
+      //        theHistoricalPricesForPositions)
+      x
+    }
     //println("found common dates: " + theSetOfCommonDates.slice(0, 10))
-    val symbolToHistoricalPricesMap = (theHistoricalPricesForPositions :+ (theIndexSymbol, theHistoricalPricesForIndex)).toMap
+    //val symbolToHistoricalPricesMap = (theHistoricalPricesForPositions :+ (theIndexSymbol, theHistoricalPricesForIndex)).toMap
     // Now construct positions
-    thePortfolioInfo.positions(0).positionType
+    //thePortfolioInfo.positions(0).positionType
+    xx
   }
 }
