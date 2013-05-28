@@ -174,9 +174,12 @@ object PortfolioProcessor {
       val theShortAdjustment = if (thePosition.positionType == "short") { -1.0 } else { 1.0 }
       (thePosition.symbol, theShortAdjustment * thePosition.amount / theClosingPrice)
     }).toMap
-
     val xx = theSequentialDates.map { theDate =>
-    	calculateDailyPosition(theDate, numSharesMap, theHistoricalPricesForIndex, theHistoricalPricesForPositions, thePortfolioInfo.positions)
+      calculateDailyPosition(theDate,
+        numSharesMap,
+        theHistoricalPricesForIndex,
+        theHistoricalPricesForPositions,
+        thePortfolioInfo.positions)
     }
     //println("found common dates: " + theSetOfCommonDates.slice(0, 10))
     //val symbolToHistoricalPricesMap = (theHistoricalPricesForPositions :+ (theIndexSymbol, theHistoricalPricesForIndex)).toMap
@@ -194,6 +197,8 @@ object PortfolioProcessor {
     val theTotalAmountInvested = positions.foldLeft(0.0) { (theTotal, thePosition) =>
       theTotal + thePosition.amount
     }
+    val theNumberOfIndexShares = theTotalAmountInvested/historicalPricesForIndex(historicalPricesForIndex.keySet.toSeq(0))("Close").toDouble
+    println("theTotalAmountInvested = " + theTotalAmountInvested)
     val theSymbolToAmountMap = (
       positions.map { p =>
         (p.symbol, p.amount)
@@ -203,12 +208,12 @@ object PortfolioProcessor {
       if (theNumShares < 0) {
         // if this position is a short position, value should be subtracted from initial amount
         // since numShares will be negative, we add
-        theTotal + (theSymbolToAmountMap(theSymbol) + theHistoricalPricesForPositions(theSymbol)(date)("Close").toDouble * theNumShares)
+        theTotal + (2 * theSymbolToAmountMap(theSymbol) + theHistoricalPricesForPositions(theSymbol)(date)("Close").toDouble * theNumShares)
       } else {
         theTotal + theHistoricalPricesForPositions(theSymbol)(date)("Close").toDouble * theNumShares
       }
     }
-    DateToPositionMap(date, theTotalAmountInvested / historicalPricesForIndex(date)("Close").toDouble, thePositionValue)
+    DateToPositionMap(date, theNumberOfIndexShares * historicalPricesForIndex(date)("Close").toDouble, thePositionValue)
   }
 }
 
