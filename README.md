@@ -50,12 +50,12 @@ This is the portfolio modeling library. This allows you to quickly create Back-t
 The library is quite powerful and includes a *domain specific language parser* for modeling scenarios. Market data is dynamically pulled in from public sources (MSN, Yahoo/Google finance).
 For example to backtest the return of an equities portfolio composed of several long or short equities positions:
 
-      portfolio pf1 compare with "^GSPC"
-      long THRM USD 10000 on 2010-12-14 at 11.14
-      long LKQ USD 10000  on 2010-12-14 at 23.20 stop loss 50%
-      long DORM USD 10000 on 2010-12-14 at 38.86
-      short CWEI USD 10000 on 2010-12-14 at 12.91 stop loss 100%
-      short TEN USD 10000 on 2010-12-14 at 41.19  stop loss 100%
+      portfolio pf1 compare with "^GSPC" from 2013-04-10 to now
+      long THRM USD 10000 at 11.14
+      long LKQ USD 10000 at 23.20 stop-loss 50%
+      long DORM USD 10000 at 38.86
+      short CWEI USD 10000 at 12.91 stop-loss 100%
+      short TEN USD 10000 at 41.19  stop-loss 100%
 
 Providing the above portfolio specification as a string to the scenario tester will produce a report of the returns of the portfolio over a given period of time.
 This allows a very easy way to document the scenarios and use the same specification in the documentation as well as the actual test code.
