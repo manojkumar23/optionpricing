@@ -24,7 +24,7 @@ object PortfolioDefinition extends JavaTokenParsers {
 
   def compareWith: Parser[String] = "compare" ~> "with" ~> stringLiteral
 
-  def dateRange: Parser[PositionDuration] = ("from" ~> dateDef) ~ ("to" ~> dateDef) ^^ {
+  def dateRange: Parser[PositionDuration] = ("from" ~> flexDateDef) ~ ("to" ~> flexDateDef) ^^ {
     case fromDate ~ toDate => {
       //println("from: " + fromDate + " to: " + toDate)
       PositionDuration(fromDate, toDate)
@@ -48,6 +48,10 @@ object PortfolioDefinition extends JavaTokenParsers {
   def stopLoss: Parser[Double] = "stop-loss" ~> decimalNumber ~ "%".? ^^ {
     case theStopLoss ~ isPercent =>
       theStopLoss.toDouble * (if (isPercent.isDefined) { 0.01 } else { 1 })
+  }
+  
+  def flexDateDef: Parser[DateTime] = dateDef | "now" ^^ {
+    case x => new DateTime()
   }
 
   def dateDef: Parser[DateTime] = new Regex("([0-9]{4})-([0-9]{2})-([0-9]{2})") ^^ { theDate =>
@@ -198,7 +202,7 @@ object PortfolioProcessor {
       theTotal + thePosition.amount
     }
     val theNumberOfIndexShares = theTotalAmountInvested/historicalPricesForIndex(historicalPricesForIndex.keySet.toSeq(0))("Close").toDouble
-    println("theTotalAmountInvested = " + theTotalAmountInvested)
+    //println("theTotalAmountInvested = " + theTotalAmountInvested)
     val theSymbolToAmountMap = (
       positions.map { p =>
         (p.symbol, p.amount)
