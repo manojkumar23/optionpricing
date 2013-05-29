@@ -2,7 +2,7 @@ name := "portfolio"
 
 organization := "net.gadgil.finance"
 
-version := "0.3.4-SNAPSHOT"
+version := "0.3.5-SNAPSHOT"
 
 publishTo := Some(Resolver.file("file",  new File( "./releases" )) )
 
@@ -18,7 +18,7 @@ scalaVersion := "2.10.1"
 
 //useGpg := true
 
-useGpg := false
+//useGpg := false
 
 
 
