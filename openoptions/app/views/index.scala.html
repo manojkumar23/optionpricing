@@ -1,7 +1,10 @@
-@(message: String)
+@(message: String, portfolioForm: Form[PortfolioInput])
 
 @main("Welcome to OpenOptions") {
     
-    @play20.welcome(message)
+    @helper.form(action = routes.Application.simulate) {
+    <textarea name="definition"></textarea>
+    <input type="submit"/>
+	}
     
 }
