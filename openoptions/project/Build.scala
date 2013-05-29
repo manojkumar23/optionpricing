@@ -10,7 +10,7 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     // Add your project dependencies here,
    //   "org.apache.commons" % "commons-math3" % "3.2",
-      "net.gadgil" % "finance.portfolio_2.10" % "0.2.0-SNAPSHOT",
+      "net.gadgil.finance" % "portfolio_2.10" % "0.2.0-SNAPSHOT",
     jdbc,
     anorm
   )
