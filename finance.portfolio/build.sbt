@@ -2,7 +2,7 @@ name := "portfolio"
 
 organization := "net.gadgil.finance"
 
-version := "0.3.5-SNAPSHOT"
+version := "0.3.6-SNAPSHOT"
 
 publishTo := Some(Resolver.file("file",  new File( "./releases" )) )
 
@@ -15,6 +15,9 @@ OsgiKeys.exportPackage := Seq("net.gadgil.finance.portfolio.*")
 resolvers += "mvnepository" at "http://mvnrepository.com/artifact"
 
 scalaVersion := "2.10.1"
+
+checksums in publish := Nil
+
 
 //useGpg := true
 
