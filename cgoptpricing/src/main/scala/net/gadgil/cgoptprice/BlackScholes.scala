@@ -238,7 +238,7 @@ object OptionSensitivities {
     val (d1, d2) = BlackScholes.d1d2(stockPrice, strikePrice, timeToExpiry, costOfCarry, volatility)
     -(stockPrice * math.exp((costOfCarry - discountRate) * timeToExpiry) * nprime(d1) * volatility) / (2 * math.sqrt(timeToExpiry)) -
       (costOfCarry - discountRate) * stockPrice * math.exp((costOfCarry - discountRate) * timeToExpiry) * BlackScholes.CND(d1) -
-      discountRate * strikePrice *math.exp(-discountRate*timeToExpiry) * BlackScholes.CND(d2)
+      discountRate * strikePrice * math.exp(-discountRate * timeToExpiry) * BlackScholes.CND(d2)
   }
 
   def thetaPut(stockPrice: Double,
@@ -250,7 +250,7 @@ object OptionSensitivities {
     val (d1, d2) = BlackScholes.d1d2(stockPrice, strikePrice, timeToExpiry, costOfCarry, volatility)
     -(stockPrice * math.exp((costOfCarry - discountRate) * timeToExpiry) * nprime(d1) * volatility) / (2 * math.sqrt(timeToExpiry)) +
       (costOfCarry - discountRate) * stockPrice * math.exp((costOfCarry - discountRate) * timeToExpiry) * BlackScholes.CND(-d1) +
-      discountRate * strikePrice *math.exp(-discountRate*timeToExpiry) * BlackScholes.CND(-d2)
+      discountRate * strikePrice * math.exp(-discountRate * timeToExpiry) * BlackScholes.CND(-d2)
   }
 
   def rhoCall(stockPrice: Double,
@@ -260,7 +260,11 @@ object OptionSensitivities {
     costOfCarry: Double,
     volatility: Double) = {
     val (d1, d2) = BlackScholes.d1d2(stockPrice, strikePrice, timeToExpiry, costOfCarry, volatility)
-
+    if (costOfCarry != 0) {
+      timeToExpiry * strikePrice * math.exp(-discountRate * timeToExpiry) * BlackScholes.CND(d2)
+    } else {
+      -timeToExpiry * BlackScholes.callOptionGeneralizedBlackScholes(stockPrice, strikePrice, timeToExpiry, discountRate, costOfCarry, volatility)
+    }
   }
 
   def rhoPut(stockPrice: Double,
@@ -270,7 +274,11 @@ object OptionSensitivities {
     costOfCarry: Double,
     volatility: Double) = {
     val (d1, d2) = BlackScholes.d1d2(stockPrice, strikePrice, timeToExpiry, costOfCarry, volatility)
-
+    if (costOfCarry != 0) {
+      timeToExpiry * strikePrice * math.exp(-discountRate * timeToExpiry) * BlackScholes.CND(-d2)
+    } else {
+      -timeToExpiry * BlackScholes.putOptionGeneralizedBlackScholes(stockPrice, strikePrice, timeToExpiry, discountRate, costOfCarry, volatility)
+    }
   }
 
   def costOfCarrySensitivityCall(stockPrice: Double,

@@ -51,6 +51,8 @@ class PlainVanillaSpec extends Specification {
       math.abs(18.9358 - theVegaCallPut) must be lessThan 0.0001
       math.abs(0.0278 - OptionSensitivities.gammaCallPut(stockPrice2, strikePrice2, timeToExpiry2, discountRate2, costOfCarry2, volatility2)) must
         be lessThan 0.0001
+      math.abs(38.7325 - OptionSensitivities.rhoCall(72, 75, 1.0, 0.09, 0.09, 0.19)) must
+        be lessThan 0.0001
     }
   }
 
