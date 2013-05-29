@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import play.Project._
+import java.io.File
 
 object ApplicationBuild extends Build {
 
@@ -14,13 +15,20 @@ object ApplicationBuild extends Build {
     jdbc,
     anorm
   )
+  
+  //checksums in update := Nil
+
 
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
     // Add your own project settings here      
       //resolvers += "JBoss repository" at "https://repository.jboss.org/nexus/content/repositories/"
-      resolvers += "Chetan's repository" at "https://github.com/cgadgil/optionpricing/tree/master/finance.portfolio/releases"
-  
+      //resolvers += "Chetan's repository" at "https://github.com/cgadgil/optionpricing/tree/master/finance.portfolio/releases",
+
+      resolvers += Resolver.file("LocalIvy", file(Path.userHome +
+      File.separator + ".ivy2" + File.separator +
+      "local"))(Resolver.ivyStylePatterns)
+      
   )
 
 }

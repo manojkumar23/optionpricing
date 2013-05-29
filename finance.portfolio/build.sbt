@@ -16,7 +16,7 @@ resolvers += "mvnepository" at "http://mvnrepository.com/artifact"
 
 scalaVersion := "2.10.1"
 
-checksums in publish := Nil
+// checksums in publish := Nil
 
 
 //useGpg := true
