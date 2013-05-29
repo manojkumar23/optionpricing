@@ -2,7 +2,7 @@ name := "portfolio"
 
 organization := "net.gadgil.finance"
 
-version := "0.3.3-SNAPSHOT"
+version := "0.3.4-SNAPSHOT"
 
 publishTo := Some(Resolver.file("file",  new File( "./releases" )) )
 
@@ -16,7 +16,10 @@ resolvers += "mvnepository" at "http://mvnrepository.com/artifact"
 
 scalaVersion := "2.10.1"
 
-useGpg := true
+//useGpg := true
+
+useGpg := false
+
 
 
 libraryDependencies ++= Seq(
