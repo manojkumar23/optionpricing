@@ -1,6 +1,6 @@
-name := "finance.portfolio"
+name := "portfolio"
 
-organization := "net.gadgil"
+organization := "net.gadgil.finance"
 
 version := "0.2.0-SNAPSHOT"
 
