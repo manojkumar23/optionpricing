@@ -17,6 +17,16 @@ The set of libraries has been in implemented in Scala 2.10.1. However, it can be
 
 ## Organization of libraries
 
+###**openoptions** at https://github.com/cgadgil/optionpricing/tree/master/openoptions
+
+RESTful API and visualization tools.
+The goal of this sub-project is to make all the above APIs as a scalable grid of RESTful APIs.
+The market data feeds, parsers and the pricers will be tied to a 
+high speed messaging bus (Apollo: http://activemq.apache.org/apollo/).
+
+This project is being implemented in Scala 2.10.1 with the Play framework.
+
+
 ###**scenariomodeling** at https://github.com/cgadgil/optionpricing/tree/master/scenariomodeling
 Note: This library depends on Jasper Reports which is available under LGPL 3.0.
 It allows you to use the libraries below to create and test investment and trading strategies. For example you can define
@@ -59,14 +69,4 @@ For example to backtest the return of an equities portfolio composed of several 
 
 Providing the above portfolio specification as a string to the scenario tester will produce a report of the returns of the portfolio over a given period of time.
 This allows a very easy way to document the scenarios and use the same specification in the documentation as well as the actual test code.
-
-###**openoptions** at https://github.com/cgadgil/optionpricing/tree/master/openoptions
-
-RESTful API and visualization tools.
-The goal of this sub-project is to make all the above APIs as a scalable grid of RESTful APIs.
-The market data feeds, parsers and the pricers will be tied to a 
-high speed messaging bus (Apollo: http://activemq.apache.org/apollo/).
-
-This project is being implemented in Scala 2.10.1 with the Play framework.
-
 
