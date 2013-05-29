@@ -2,7 +2,7 @@ name := "portfolio"
 
 organization := "net.gadgil.finance"
 
-version := "0.3.2-SNAPSHOT"
+version := "0.3.3-SNAPSHOT"
 
 publishTo := Some(Resolver.file("file",  new File( "./releases" )) )
 
