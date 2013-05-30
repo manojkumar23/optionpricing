@@ -1,0 +1,29 @@
+@(message: String, positionsJson: String)
+
+@main("Welcome to OpenOptions") {
+    
+    <script src="http://yui.yahooapis.com/3.10.1/build/yui/yui-min.js"></script>
+
+	<div id="mychart" style="background-color:#EEEEEE;height:400px;width:600px;float:left;">Content</div>
+
+
+	<script>
+	// Create a new YUI instance and populate it with the required modules.
+	YUI().use('charts', function (Y) {
+	    // Charts is available and ready for use. Add implementation
+	    // code here.
+	    var positions = @Html(positionsJson);
+		@*
+	    var positions = [
+	         {category:"5/1/2010", values:2000},
+	         {category:"5/2/2010", values:50},
+	         {category:"5/3/2010", values:400},
+	         {category:"5/4/2010", values:200},
+	         {category:"5/5/2010", values:5000}
+	     ];
+		*@
+	    var mychart = new Y.Chart({dataProvider: positions, render:"#mychart"});
+	});
+	</script>
+    
+}
