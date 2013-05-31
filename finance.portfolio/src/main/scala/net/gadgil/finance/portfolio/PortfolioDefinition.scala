@@ -32,10 +32,10 @@ object PortfolioDefinition extends JavaTokenParsers {
   }
 
   def portfolioComposition: Parser[Seq[PortfolioPosition]] = position.+
-  def position: Parser[PortfolioPosition] = ("long" | "short") ~ ident ~ ident ~ decimalNumber ~ atPrice ~ stopLoss.? ^^ {
+  def position: Parser[PortfolioPosition] = ("long" | "short") ~ ident ~ ident ~ decimalNumber ~ atPrice.? ~ stopLoss.? ^^ {
     case positionType ~ symbol ~ currencyCode ~ amount ~ thePrice ~ theStopLoss => {
       //println(positionType, symbol, amount, theDate)
-      PortfolioPosition(positionType, symbol, amount.toDouble, stopLoss = theStopLoss)
+      PortfolioPosition(positionType, symbol, amount.toDouble, thePrice, stopLoss = theStopLoss)
     }
   }
 
@@ -68,7 +68,7 @@ object PortfolioDefinition extends JavaTokenParsers {
 
 //case class TradeDate(year: Int, month: Int, day: Int)
 case class PortfolioInfo(name: String, compareWith: String, positionDuration: PositionDuration, positions: Seq[PortfolioPosition])
-case class PortfolioPosition(positionType: String, symbol: String, amount: Double, stopLoss: Option[Double])
+case class PortfolioPosition(positionType: String, symbol: String, amount: Double, atPrice: Option[Double], stopLoss: Option[Double])
 case class PositionDuration(fromDate: DateTime, toDate: DateTime)
 
 object PortfolioProcessor {
