@@ -1,9 +1,10 @@
 @(message: String, indexJson: String, positionsJson: String)
 
 @main("Welcome to OpenOptions") {
-    
 
-	<div id="mychart" style="background-color:#EEEEEE;height:400px;width:600px;float:left;">Content</div>
+@header("Performance against benchmark")
+    
+<div id="mychart" class="chartBox"></div>
 
 
   <script type="text/javascript">
@@ -34,11 +35,11 @@
     chart.render();
   }
   var data = [];
-   var dataSeries1 = { type: "line" };
+   var dataSeries1 = { type: "line", name: "Benchmark (Index)", showInLegend: true };
   dataSeries1.dataPoints = @Html(indexJson);
   //data.push(dataSeries);     
   
-  var dataSeries2 = { type: "line" };
+  var dataSeries2 = { type: "line", name: "Your portfolio", showInLegend: true };
   dataSeries2.dataPoints = @Html(positionsJson);
   data.push(dataSeries1);     
   data.push(dataSeries2);     

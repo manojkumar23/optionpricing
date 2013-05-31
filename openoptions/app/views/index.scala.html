@@ -1,10 +1,21 @@
 @(message: String, portfolioForm: Form[PortfolioInput])
 
 @main("Welcome to OpenOptions") {
-    
+    <h2>Enter the portfolio to be modeled</h2>
+    <div class="span6">
+    <h3>For example</h3>
+    <pre>
+      portfolio pf1 compare with "^GSPC" from 2013-04-10 to now
+      long THRM USD 10000 at 11.14
+      long LKQ USD 10000 at 23.20 stop-loss 50%
+      long DORM USD 10000 at 38.86
+      short CWEI USD 10000 at 12.91 stop-loss 100%
+      short TEN USD 10000 at 41.19  stop-loss 100%
+      long AMD USD 30000 at 20.0
+    </pre>
     @helper.form(action = routes.Application.simulate) {
-    <textarea name="definition"></textarea>
+    <textarea name="definition" class="span6 inputText" rows="10"></textarea><br/>
     <input type="submit"/>
 	}
-    
+    </div>
 }
