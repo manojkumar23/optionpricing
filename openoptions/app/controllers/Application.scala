@@ -26,22 +26,27 @@ object Application extends Controller {
       Ok(hasErrors.errorsAsJson)
     },
       success => {
-        println("success")
-        val y = PortfolioProcessor.simulatePortfolio(success.definition)
-        val indexValues = y.map { p =>
-        	//Map("date" -> Json.toJson(p.date), "index" -> Json.toJson(p.indexValue), "your portfolio" -> Json.toJson(p.positionValue))
-          Map("label" -> Json.toJson(p.date), "y" -> Json.toJson(p.indexValue))
+        //println("success")
+        try {
+          val y = PortfolioProcessor.simulatePortfolio(success.definition)
+          val indexValues = y.map { p =>
+            //Map("date" -> Json.toJson(p.date), "index" -> Json.toJson(p.indexValue), "your portfolio" -> Json.toJson(p.positionValue))
+            Map("label" -> Json.toJson(p.date), "y" -> Json.toJson(p.indexValue))
+          }
+          val positionValues = y.map { p =>
+            //Map("date" -> Json.toJson(p.date), "index" -> Json.toJson(p.indexValue), "your portfolio" -> Json.toJson(p.positionValue))
+            Map("label" -> Json.toJson(p.date), "y" -> Json.toJson(p.positionValue))
+          }
+          //Ok(Json.toJson(y.map { dpi => dpi.positionValue }))
+          val xxxx = Json.toJson(indexValues)
+          val yyyy = Json.toJson(positionValues)
+          //println(xxxx)
+          Ok(views.html.portfolioPerformance("performance details", xxxx.toString, yyyy.toString))
+          //Ok("")
+        } catch {
+          case e: Exception => { Ok(e.toString()) }
         }
-        val positionValues = y.map { p =>
-        	//Map("date" -> Json.toJson(p.date), "index" -> Json.toJson(p.indexValue), "your portfolio" -> Json.toJson(p.positionValue))
-          Map("label" -> Json.toJson(p.date), "y" -> Json.toJson(p.positionValue))
-        }
-        //Ok(Json.toJson(y.map { dpi => dpi.positionValue }))
-        val xxxx = Json.toJson(indexValues)
-        val yyyy = Json.toJson(positionValues)
-        //println(xxxx)
-        Ok(views.html.portfolioPerformance("performance details", xxxx.toString, yyyy.toString))
-        //Ok("")
       })
+
   }
 }
