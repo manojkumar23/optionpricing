@@ -17,9 +17,13 @@ class PortfolioDefinition {
 }
 
 object PortfolioDefinition extends JavaTokenParsers {
-  def portfolioStruct: Parser[PortfolioInfo] = "portfolio" ~> ident ~ compareWith ~ dateRange ~ portfolioComposition ^^ {
-    case portfolioName ~ theCompareWith ~ thePositionDuration ~ portfolioComposition =>
-      PortfolioInfo(portfolioName, theCompareWith, thePositionDuration, portfolioComposition)
+  def portfolioStruct: Parser[PortfolioInfo] = "portfolio" ~> ident ~ inverted ~ compareWith ~ dateRange ~ portfolioComposition ^^ {
+    case portfolioName ~ theInverted ~ theCompareWith ~ thePositionDuration ~ portfolioComposition =>
+      PortfolioInfo(portfolioName, theInverted, theCompareWith, thePositionDuration, portfolioComposition)
+  }
+
+  def inverted: Parser[Boolean] = "inverted".? ^^ { invert =>
+    invert.isDefined
   }
 
   def compareWith: Parser[String] = "compare" ~> "with" ~> stringLiteral
@@ -49,7 +53,7 @@ object PortfolioDefinition extends JavaTokenParsers {
     case theStopLoss ~ isPercent =>
       theStopLoss.toDouble * (if (isPercent.isDefined) { 0.01 } else { 1 })
   }
-  
+
   def flexDateDef: Parser[DateTime] = dateDef | "now" ^^ {
     case x => new DateTime()
   }
@@ -67,7 +71,7 @@ object PortfolioDefinition extends JavaTokenParsers {
 }
 
 //case class TradeDate(year: Int, month: Int, day: Int)
-case class PortfolioInfo(name: String, compareWith: String, positionDuration: PositionDuration, positions: Seq[PortfolioPosition])
+case class PortfolioInfo(name: String, inverted: Boolean, compareWith: String, positionDuration: PositionDuration, positions: Seq[PortfolioPosition])
 case class PortfolioPosition(positionType: String, symbol: String, amount: Double, atPrice: Option[Double], stopLoss: Option[Double])
 case class PositionDuration(fromDate: DateTime, toDate: DateTime)
 
@@ -175,7 +179,8 @@ object PortfolioProcessor {
     // Negative number for short positions
     val numSharesMap = (thePortfolioInfo.positions.map { thePosition =>
       val theClosingPrice = theHistoricalPricesForPositions(thePosition.symbol)(theSequentialDates(0))("Close").toDouble
-      val theShortAdjustment = if (thePosition.positionType == "short") { -1.0 } else { 1.0 }
+      val theShortAdjustment = (if (thePosition.positionType == "short") { -1.0 } else { 1.0 }) *
+        (if (thePortfolioInfo.inverted) { -1.0 } else { 1.0 })
       (thePosition.symbol, theShortAdjustment * thePosition.amount / theClosingPrice)
     }).toMap
     val xx = theSequentialDates.map { theDate =>
@@ -201,7 +206,7 @@ object PortfolioProcessor {
     val theTotalAmountInvested = positions.foldLeft(0.0) { (theTotal, thePosition) =>
       theTotal + thePosition.amount
     }
-    val theNumberOfIndexShares = theTotalAmountInvested/historicalPricesForIndex(historicalPricesForIndex.keySet.toSeq(0))("Close").toDouble
+    val theNumberOfIndexShares = theTotalAmountInvested / historicalPricesForIndex(historicalPricesForIndex.keySet.toSeq(0))("Close").toDouble
     //println("theTotalAmountInvested = " + theTotalAmountInvested)
     val theSymbolToAmountMap = (
       positions.map { p =>
