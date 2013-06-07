@@ -148,6 +148,10 @@ object PortfolioProcessor {
     }
   }
 
+  def annualizedVolatility() = {
+
+  }
+
   def simulatePortfolio(portfolioDefinitionString: String) = {
     val thePortfolioInfo = parsePortfolio(portfolioDefinitionString)
     // Usually an index symbol, but it does not have to be an index
@@ -178,10 +182,14 @@ object PortfolioProcessor {
     // Number of shares purchased
     // Negative number for short positions
     val numSharesMap = (thePortfolioInfo.positions.map { thePosition =>
+      // Closing price on the first day
       val theClosingPrice = theHistoricalPricesForPositions(thePosition.symbol)(theSequentialDates(0))("Close").toDouble
       val theShortAdjustment = (if (thePosition.positionType == "short") { -1.0 } else { 1.0 }) *
         (if (thePortfolioInfo.inverted) { -1.0 } else { 1.0 })
-      (thePosition.symbol, theShortAdjustment * thePosition.amount / theClosingPrice)
+      val theInitialPosition = InitialPosition(date = theSequentialDates(0),
+        numberOfShares = theShortAdjustment * thePosition.amount / theClosingPrice,
+        initialPrice = theClosingPrice)
+      (thePosition.symbol, theInitialPosition)
     }).toMap
     val xx = theSequentialDates.map { theDate =>
       calculateDailyPosition(theDate,
@@ -197,8 +205,11 @@ object PortfolioProcessor {
     xx
   }
 
+  /**
+   * Calculate the value of a position for a given date
+   */
   def calculateDailyPosition(date: String,
-    numSharesMap: Map[String, Double],
+    numSharesMap: Map[String, InitialPosition],
     historicalPricesForIndex: SortedMap[String, Map[String, String]],
     theHistoricalPricesForPositions: Map[String, SortedMap[String, Map[String, String]]],
     positions: Seq[PortfolioPosition]) = {
@@ -213,7 +224,7 @@ object PortfolioProcessor {
         (p.symbol, p.amount)
       }).toMap
     val thePositionValue = numSharesMap.keySet.foldLeft(0.0) { (theTotal, theSymbol) =>
-      val theNumShares = numSharesMap(theSymbol)
+      val theNumShares = numSharesMap(theSymbol).numberOfShares
       if (theNumShares < 0) {
         // if this position is a short position, value should be subtracted from initial amount
         // since numShares will be negative, we add
@@ -227,3 +238,4 @@ object PortfolioProcessor {
 }
 
 case class DateToPositionMap(date: String, indexValue: Double, positionValue: Double)
+case class InitialPosition(date: String, numberOfShares: Double, initialPrice: Double)
