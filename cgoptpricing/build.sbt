@@ -1,16 +1,16 @@
-name := "cgoptpricing"
+//name := "cgoptpricing"
 
-organization := "net.gadgil"
+// organization := "net.gadgil"
 
-version := "0.1.0-SNAPSHOT"
+// version := "0.1.0-SNAPSHOT"
 
 scalaVersion := "2.10.1"
 
 organization := "net.gadgil.cgoptprice"
 
-name := "options.pricing"
+name := "pricing"
 
-version := "0.0.1"
+version := "0.1.0-SNAPSHOT"
 
 useGpg := true
 
